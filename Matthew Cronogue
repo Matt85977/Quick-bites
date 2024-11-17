@@ -1,1 +1,185 @@
+customer_db = {}  # customer file
+feedback_db = []  # customer feedback
+menu = {
+    "Mains": {
+        "Cheese and Tomato Pizza": 10.00,
+        "Cheese and Pepperoni Pizza": 11.00,
+        "Beef Burger and Chips": 9.00,
+        "Vegetable Pie and Mash": 8.00
+    },
+    "Sides": {
+        "Chips": 3.00,
+        "Spicy Rice": 2.00,
+        "Wings": 3.50,
+        "Nuggets": 2.50
+    },
+    "Drinks": {
+        "Coke": 2.00,
+        "Water": 1.00,
+        "Sprite": 2.00,
+        "Orange": 3.00
+    },
+    "Kids Menu": {
+        "Nuggets and Chips": 4.00,
+        "Sausage and Mash": 3.50,
+        "Fish Fingers and Beans": 3.00,
+        "Veg Pie and Mash": 3.50
+    },
+    "Desserts": {
+        "Lemon Pie": 3.00,
+        "Choc Ice Cream": 2.00,
+        "Vanilla Cheese Cake": 2.50,
+        "Chocolate Fudge Brownies": 4.00
+    }
+}
 
+
+# change to menu
+def change_menu():
+    print("Menu changes:")
+    category = input("Enter category (Mains, Sides, Drinks, Kids Menu, Desserts): ")
+    if category in menu:
+        action = input("Add or Remove item? (a/r): ")
+        if action == 'a':
+            item = input("Enter item name: ")
+            price = float(input("Enter price: "))
+            menu[category][item] = price
+            print(f"Added {item} to {category} with price {price}")
+        elif action == 'r':
+            item = input("Enter item name to remove: ")
+            if item in menu[category]:
+                del menu[category][item]
+                print(f"Removed {item} from {category}")
+            else:
+                print("Item not found.")
+
+    else:
+        print("Invalid category.")
+        return change_menu()
+
+    # Customer can log in
+
+
+def customer_login():
+    print("1. New customer\n2. Existing customer")
+    option = input("Select option (1 or 2): ")
+    if option == '1':
+        name = input("Enter your name: ")
+        customer_db[name] = {'order_history': []}
+        print(f"Welcome, {name}! You have been added to the system.")
+        return name
+    elif option == '2':
+        name = input("Enter your name: ")
+        if name in customer_db:
+            print(f"Welcome back, {name}!")
+            return name
+        else:
+            print("Customer not found. Please sign up.")
+            return name
+    else:
+        print("Invalid option.")
+        return main
+
+    # menu items
+
+
+def display_menu():
+    basket = []
+    print("\n--- Menu ---")
+    for category, items in menu.items():
+        print(f"\n{category}")
+        for item, price in items.items():
+            print(f"{item}: £{price:.2f}")
+
+    while True:
+        item = input("Enter item name to add to basket (or 'done' to finish): ")
+        if item.lower() == 'done':
+            break
+        for items in menu.values():
+            if item in items:
+                basket.append((item, items[item]))
+                print(f"Added {item} - £{items[item]:.2f}")
+                break
+        else:
+            print("Item not found in menu.")
+    return basket
+
+
+# summary of order
+def order_summary(basket):
+    print("\n--- Order Summary ---")
+    total = 0
+    for item, price in basket:
+        print(f"{item}: £{price:.2f}")
+        total += price
+    print(f"Total:£{total:.2f}")
+    return total
+
+
+# peyment
+def process_order(customer_name, basket):
+    table_number = input("Select table number (1-5): ")
+    total = order_summary(basket)
+    payment_method = input("Select payment method (cash/card): ")
+
+    # Save order and generate receipt
+    customer_db[customer_name]['order_history'].append(basket)
+    receipt = {
+        "Table Number": table_number,
+        "Customer Name": customer_name,
+        "Order Summary": basket,
+        "Bill Amount": total,
+        "Discount": 0.20 * total  # 20% discount for next order
+    }
+    print_receipt(receipt)
+
+    # customer feedback if any
+    feedback = input("Would you like to leave feedback? (yes/no): ")
+    if feedback.lower() == 'yes':
+        feedback_text = input("Enter your feedback: ")
+        feedback_db.append({"Customer": customer_name, "Feedback": feedback_text})
+        print("Thank you for your feedback!")
+    if feedback.lower() == 'no':
+        print("Thank you, enjoy your meal")
+    return main()
+
+
+# Print receipt
+def print_receipt(receipt):
+    print("\n--- Receipt ---")
+    print(f"Table Number: {receipt['Table Number']}")
+    print(f"Customer Name: {receipt['Customer Name']}")
+    print("Order Summary:")
+    for item, price in receipt['Order Summary']:
+        print(f"{item}: £{price:.2f}")
+    print(f"Bill Amount: £{receipt['Bill Amount']:.2f}")
+    print("Discount: 20% off next order")
+    print("-------------------")
+
+
+# start of program
+def main():
+    print("Welcome to Quick Bites!")
+
+    # choose admin or customer
+    user_type = input("Are you admin or customer? (admin/customer): ")
+    if user_type.lower() == 'admin':
+        menu_change = input("Would you like to make changes to the menu? (yes/no): ")
+        if menu_change.lower() == 'yes':
+            change_menu()
+        else:
+            print("No changes made to the menu.")
+
+    customer_name = customer_login()
+    if customer_name:
+        basket = display_menu()
+        process_order(customer_name, basket)
+    else:
+        print("Returning to main menu.")
+
+    return main()
+
+
+# we start here
+if __name__ == "__main__":
+    main()
